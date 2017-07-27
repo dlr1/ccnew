@@ -10,8 +10,8 @@ import { CommonModule } from '@angular/common';
 import {FormsModule} from '@angular/forms';
 
 const controlRoutes: Routes = [
-  { path: 'select', component: SelectComponent }
- 
+  { path: 'select', component: SelectComponent } ,
+  { path: 'struct', component: StructuralComponent }
 ];
 
 @NgModule({
