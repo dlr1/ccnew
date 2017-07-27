@@ -1,0 +1,13 @@
+<p>binding and selecting strings</p>
+<select class="form-control" [(ngModel)]="strValue">
+    <option *ngFor="let h of heroes" [value]="h">{{h}}</option>
+</select>
+selectedvalue is {{strValue}}
+<br/>
+<br/>
+<p>binding and selecting objects</p>
+<select class="form-control" [(ngModel)]="selectedHero" (change)="heroChanged()">
+    <option *ngFor="let h of cheroes" [ngValue]="h">{{h.name}}</option>
+</select>
+
+selectedhero is {{selectedHero?.id}}
