@@ -11,13 +11,15 @@ import { DynamicComponent, HostDirective } from "./dynamic.component";
 import { TFormsComponent } from "./tforms.component";
 import { RFormsComponent } from "./rforms.component";
 import {ChildComponent} from './child.component';
+import { SanitizeComponent } from "./sanitize.component";
 
 const controlRoutes: Routes = [
   { path: 'select', component: SelectComponent },
   { path: 'struct', component: StructuralComponent },
   { path: 'tforms', component: TFormsComponent },
   { path: 'rforms', component: RFormsComponent },
-  { path: 'dynamic', component: DynamicComponent }
+  { path: 'dynamic', component: DynamicComponent },
+  { path: 'sanitize', component: SanitizeComponent }
 
 ];
 
@@ -30,7 +32,8 @@ const controlRoutes: Routes = [
     RFormsComponent,
     DynamicComponent,
     ChildComponent,
-    HostDirective
+    HostDirective,
+    SanitizeComponent
   ],
   entryComponents:[ChildComponent],
   imports: [
