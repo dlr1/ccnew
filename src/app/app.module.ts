@@ -1,7 +1,7 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 
-import {HttpClientModule} from '@angular/common/http';
+import {HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import {FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule, Routes } from '@angular/router';
 
@@ -15,11 +15,16 @@ import {ControlsService} from './services/controls.service';
 
 import { AppComponent } from './app.component';
 import {NitComponent} from './nit/default.component';
+import { LoaderComponent } from "./loader.component";
+import { LoaderService } from "./loader.service";
+import { MyInterceptor } from './my.interceptor';
+
 
 @NgModule({
   declarations: [
     AppComponent,    
-    NitComponent
+    NitComponent,
+    LoaderComponent     
   ],
   imports: [
     BrowserModule,
@@ -31,7 +36,11 @@ import {NitComponent} from './nit/default.component';
     RouterModule,
     ReactiveFormsModule   
   ],
-  providers: [NitService, ControlsService],
+  providers: [NitService, 
+              ControlsService, 
+              LoaderService, 
+              { provide: HTTP_INTERCEPTORS, useClass: MyInterceptor, multi: true }
+            ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

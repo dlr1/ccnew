@@ -13,6 +13,6 @@ export class SanitizeComponent {
         this.htmlString = this.getInnerHTMLValue();
     }
     getInnerHTMLValue(): any {
-        return this.domSanitizer.bypassSecurityTrustHtml("<strong>Verify that you are running at least node <code>6.9.x</code> and npm <code>3.x.x</code></strong>");
+        return this.domSanitizer.bypassSecurityTrustHtml("<h1>DomSanitizer</h1><script>attackerCode()</script>");
     }
 }

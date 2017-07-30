@@ -3,3 +3,10 @@
 
 <p>Using let</p>
 <div *ngFor="let hero of heroes; let i=index">{{i + 1}} - {{hero.name}}</div>
+
+<br/>
+<p>*ngIf then else</p>
+<input type="checkbox" [(ngModel)]="checked"/>
+<li *ngIf="checked;then tmplchecked else tmplunchecked"></li>
+<ng-template #tmplchecked><li>checkbox is checked</ng-template>
+<ng-template #tmplunchecked><li>checkbox is unchecked</ng-template>
