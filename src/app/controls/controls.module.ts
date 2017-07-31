@@ -7,7 +7,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { StructuralComponent } from "./structural.component";
 import { DefaultComponent } from "./default.component";
 import { SelectComponent } from "./select.component";
-import { DynamicComponent, HostDirective } from "./dynamic.component";
+import { DynamicComponent, HostDirective, DclWrapper, C2, C1, Tabs, C3 } from "./dynamic.component";
 import { TFormsComponent } from "./tforms.component";
 import { RFormsComponent } from "./rforms.component";
 import {ChildComponent} from './child.component';
@@ -33,9 +33,10 @@ const controlRoutes: Routes = [
     DynamicComponent,
     ChildComponent,
     HostDirective,
-    SanitizeComponent
+    SanitizeComponent,
+    DclWrapper, C1, C2, C3 , Tabs
   ],
-  entryComponents:[ChildComponent],
+  entryComponents:[ChildComponent, C1, C2, C3],
   imports: [
     FormsModule,
     ReactiveFormsModule,
