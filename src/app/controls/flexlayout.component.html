@@ -1,0 +1,31 @@
+<div class="container">
+    <md-select placeholder="select a sample" [(ngModel)]="selectedSample">
+        <md-option *ngFor="let sample of samples" [value]="sample">{{sample}}</md-option>
+    </md-select>
+    <br/><br/>
+    <div class="container" [fxShow]="isSelected('sample 1')" fxLayout="row" fxLayoutGap="10px" fxLayoutAlign="center">
+        <div class="green" fxFlex="15%">Item 1</div>
+        <div class="yellow" fxFlex="20%">Item 2</div>
+        <div class="red" fxFlex>Item 3</div>
+    </div>
+
+    <div class="container" [fxShow]="isSelected('sample 2')" fxLayout="column" fxLayoutGap="10px">
+        <md-toolbar>header content</md-toolbar>
+        <div class="container" fxLayout="column" fxLayoutGap="10px">
+            <md-toolbar>some other content</md-toolbar>
+            <div class="container" fxLayout="row" fxLayoutGap="10px">
+                <div class="container" fxLayout="column" fxFlex="30%" fxLayoutAlign="start stretch" fxLayoutGap="10px">
+                    <div class="default" fxFlex="40%">col 1</div>
+                    <div class="default" fxFlex>col 1.1</div>
+                </div>
+                <div class="container" fxLayout="column" fxLayoutAlign="start stretch" fxFlex="70%" fxLayoutGap="10px">
+                    <div class="default">col 2</div>
+                    <div class="container">
+                        <div class="default" fxFlex="60%">col 2.1</div>
+                        <div class="default" fxFlex>col 2.2</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -4,6 +4,8 @@ import { RouterModule, Routes } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
+import {MaterialModule} from '@angular/material';
+
 import { StructuralComponent } from "./structural.component";
 import { DefaultComponent } from "./default.component";
 import { SelectComponent } from "./select.component";
@@ -12,6 +14,9 @@ import { TFormsComponent } from "./tforms.component";
 import { RFormsComponent } from "./rforms.component";
 import {ChildComponent} from './child.component';
 import { SanitizeComponent } from "./sanitize.component";
+import { FlexComponent } from "./flexlayout.component";
+
+import { FlexLayoutModule } from "@angular/flex-layout";
 
 const controlRoutes: Routes = [
   { path: 'select', component: SelectComponent },
@@ -19,8 +24,8 @@ const controlRoutes: Routes = [
   { path: 'tforms', component: TFormsComponent },
   { path: 'rforms', component: RFormsComponent },
   { path: 'dynamic', component: DynamicComponent },
-  { path: 'sanitize', component: SanitizeComponent }
-
+  { path: 'sanitize', component: SanitizeComponent },
+  { path: 'flex', component: FlexComponent }
 ];
 
 @NgModule({
@@ -34,12 +39,15 @@ const controlRoutes: Routes = [
     ChildComponent,
     HostDirective,
     SanitizeComponent,
+    FlexComponent,
     DclWrapper, C1, C2, C3 , Tabs
   ],
   entryComponents:[ChildComponent, C1, C2, C3],
   imports: [
     FormsModule,
     ReactiveFormsModule,
+    MaterialModule,
+    FlexLayoutModule,
     RouterModule.forRoot(
       controlRoutes,
       { enableTracing: false }), // <-- debugging purposes only
