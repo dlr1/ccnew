@@ -4,7 +4,6 @@ import { Observable } from "rxjs/Observable";
 
 export class RingLib {
 
-
     erp_ids = [
         { "ring_id": 1, "ring_id_east": 10, "ring_id_west": 11 },
         { "ring_id": 2, "ring_id_east": 12, "ring_id_west": 13 },
@@ -680,41 +679,299 @@ export class RingLib {
             ]
         }];
 
-    parsers = {
+    eln_master_parser(keys, text, device) {
+        var key = keys[0];
+        var pattern = key.pattern;
+        var values = text.match(pattern);
+        return { name: key.name, data: values };
+    }
 
-        'eln_master_parser': function (keys, text, device) {
-            var key = keys[0];
-            var pattern = key.pattern;
-            var values = text.match(pattern);
-            return { name: key.name, data: values };
-        },
+    cssCiscoParser(keys, text, device) {
+        var values = [];
+        for (var i = 0; i < keys.length; ++i in keys) {
 
-        'cssCiscoParser': function (keys, text, device) {
-            var values = [];
+            // capture everything in text except timestamp in 1st line
+            var textLineArray = text.split('\n');
+            textLineArray.shift();
+            var allText = textLineArray.join('\n');
+
+            // if the pattern is null, we will pass the whole text to the data function
+            var item = {
+                index: keys[i].index,
+                name: keys[i].name,
+                value: keys[i].pattern == null ? keys[i].data(allText, device) : keys[i].data(text.match(keys[i].pattern, device)[0].trim()),
+                style: '',
+                valid: false
+            };
+
+            var expectation = keys[i].expect;
+            if (expectation != undefined) {
+                if (keys[i].style != undefined) {
+                    var itemStyle = keys[i].styles.filter(function (style) { return style.value == item.value })[0];
+                    if (itemStyle) {
+                        item.style = itemStyle.style;
+                        item.valid = itemStyle.valid;
+                    }
+                }
+                else {
+                    if (item.value == expectation) {
+                        item.style = 'text-success bg-success';
+                        item.valid = true;
+                    } else {
+                        item.style = 'text-danger bg-danger';
+                        item.valid = false;
+                    }
+                }
+            }
+
+            values.push(item);
+        }
+
+        // check if we have "optic" in the array, if there validate TX and RX levels
+        var opticItem = values.filter(function (item) { return item.name == 'Optic'; });
+
+        if (opticItem && opticItem.length > 0) {
+            var opticValue = opticItem[0].value;
+
+            var optic = this.css_cisco_optics_ranges.filter(function (item) { return item.optic == opticValue; })[0];
+
+            //validate Tx level
+            var txItem = values.filter(function (item) { return item.name == 'TX Level'; })[0];
+
+            txItem.title = optic["optic"].split(' ')[0] + ' (Tx) ' + optic.tx_min + ' to ' + optic.tx_max;
+
+
+            var txLevel = parseFloat(txItem.value);
+            if (txLevel >= optic["tx_min"] && txLevel <= optic["tx_max"]) {
+                txItem.style = 'text-success bg-success';
+                txItem.valid = true;
+            }
+            else {
+                txItem.style = 'text-danger bg-danger';
+                txItem.valid = false;
+            }
+
+            //validate Rx level
+            var rxItem = values.filter(function (item) { return item.name == 'RX Level'; })[0];
+
+            rxItem.title = optic["optic"].split(' ')[0] + ' (Rx) ' + optic.rx_min + ' to ' + optic.rx_max;
+
+            var rxLevel = parseFloat(rxItem.value);
+            if (rxLevel >= optic["rx_min"] && rxLevel <= optic["rx_max"]) {
+                rxItem.style = 'text-success bg-success';
+                rxItem.valid = true;
+            }
+            else {
+                rxItem.style = 'text-danger bg-danger';
+                rxItem.valid = false;
+            }
+        }
+
+
+        return values;
+    }
+
+    cssCiscoPortsParser(keys, text) {
+        console.log('cssCiscoPortsParser:' + text);
+        var key = keys[0];
+        var pattern = key.pattern;
+        var ports = text.match(pattern);
+        var values = [];
+        ports.forEach(function (port) {
+            var obj = {
+                index: key.index,
+                name: key.name,
+                value: port.replace('Te', '').trim(),
+            }
+            values.push(obj);
+        })
+
+        return values;
+    }
+
+    physicalLayerParser(keys, text) {
+
+        // this parser will search the provided text, find a key then extract the value that follows
+
+        var obj = {};
+        for (var i = 0; i < keys.length; ++i in keys) {
+            var key = keys[i];
+            var startIndex = text.indexOf(key.find) + key.find.length;
+            var data = text.substr(startIndex, key.size);
+
+            if (typeof (key.expect) == 'undefined') {
+                key.style = 'text-default';
+                key.valid = true;
+            } else {
+                if (data.trim() == key.expect) {
+                    key.style = 'text-success bg-success';
+                    key.valid = true;
+                } else {
+                    key.style = 'text-danger bg-danger';
+                    key.valid = false;
+                }
+            }
+            obj[key.name] = {
+                index: key.index,
+                name: key.name,
+                value: data.trim(),
+                style: key.style,
+                valid: key.valid
+            }
+        }
+        var optic = this.eln_optics_ranges.filter(function (item) { return item.optic == obj["Optic"].value; })[0];
+
+        obj["TX Level"].title = optic["optic"].split(' ')[0] + ' (Tx) ' + optic.tx_min + ' to ' + optic.tx_max;
+        obj["RX Level"].title = optic["optic"].split(' ')[0] + ' (Rx) ' + optic.rx_min + ' to ' + optic.rx_max;
+        //validate Tx level
+        var txLevel = parseFloat(obj["TX Level"].value);
+        if (txLevel >= optic["tx_min"] && txLevel <= optic["tx_max"]) {
+            obj["TX Level"].style = 'text-success bg-success';
+            obj["TX Level"].valid = true;
+        }
+        else {
+            obj["TX Level"].style = 'text-danger bg-danger';
+            obj["TX Level"].valid = false;
+        }
+
+        //validate Rx level
+        var rxLevel = parseFloat(obj["RX Level"].value);
+        if (rxLevel >= optic["rx_min"] && rxLevel <= optic["rx_max"]) {
+            obj["RX Level"].style = 'text-success bg-success';
+            obj["RX Level"].valid = true;
+        }
+        else {
+            obj["RX Level"].style = 'text-danger bg-danger';
+            obj["RX Level"].valid = false;
+        }
+
+        return obj;
+    }
+
+    ringPathParser(keys, text) {
+
+        // this parser will search the provided text, find a key then extract the value that follows
+
+        var obj = {};
+
+        for (var i = 0; i < keys.length; ++i in keys) {
+            var key = keys[i];
+            var startIndex = text.indexOf(key.find) + key.skip;
+            var data = text.substr(startIndex, key.size);
+
+            if (key.name == 'Ring Path' && data.indexOf('===') != -1)
+                data = 'Pending';
+
+            obj[key.name] = {
+                index: key.index,
+                name: key.name,
+                value: data.trim(),
+                valid: true
+            };
+
+        }
+
+        return obj;
+    }
+
+    logicalRingParser(keys, text) {
+        // this parser will search the provided text, find a key then extract the value that follows
+        var obj = {};
+
+        var status = 'Ready';
+
+        for (var i = 0; i < keys.length; ++i in keys) {
+            var key = keys[i];
+            var startIndex = text.indexOf(key.find) + key.skip;
+            var data = text.substr(startIndex, key.size);
+
+            if (typeof (key.expect) == 'undefined') {
+                key.style = 'text-default';
+                key.valid = true;
+            } else {
+
+                if (data.trim() == key.expect) {
+                    key.style = 'text-success bg-success';
+                    key.valid = true;
+                } else {
+                    key.style = 'text-danger bg-danger';
+                    key.valid = false;
+                }
+            }
+
+            obj[key.name] = {
+                index: key.index,
+                name: key.name,
+                value: data.trim(),
+                style: key.style,
+                valid: key.valid
+            };
+
+        }
+
+
+        return obj;
+    }
+
+    showPortsParser(keys, text) {
+
+        // this parser will search the provided text, find a key then extract the value that follows
+
+        var values = [];
+        var lines = text.split('\n');
+        // find lines numbers 
+        var portHeadingLines = []
+        lines.forEach(function (line, index) {
+            if (line.indexOf('Ports on Slot ') > -1)
+                portHeadingLines.push(index + 5);
+        }
+        );
+
+        var counter = 0;
+        while (counter < portHeadingLines.length) {
+            for (var j = portHeadingLines[counter]; lines[j].trim() != ''; j++) {
+                if (lines[j].substring(0, 1) == '=') continue;
+                var rowValues = [];
+                for (var i = 0; i < keys.length; ++i in keys) {
+                    var key = keys[i];
+                    var startIndex = lines[j].indexOf(key.find) + key.skip;
+                    var data = lines[j].substr(startIndex, key.size);
+                    rowValues.push(data.trim());
+                }
+                values.push(rowValues);
+            }
+            counter++;
+        }
+
+        return values;
+    }
+
+    cssAlcatelPortsParser(keys, text) {
+        var key = keys[0];
+        var pattern = key.pattern;
+        var data = text.match(pattern);
+        var values = [];
+        data.forEach(function (portData) {
+            var rowValues = [];
+
             for (var i = 0; i < keys.length; ++i in keys) {
 
-                // capture everything in text except timestamp in 1st line
-                var textLineArray = text.split('\n');
-                textLineArray.shift();
-                var allText = textLineArray.join('\n');
-
+                var searchText = keys[i].searchWholeResponse ? text : portData;
                 // if the pattern is null, we will pass the whole text to the data function
                 var item = {
                     index: keys[i].index,
                     name: keys[i].name,
-                    value: keys[i].pattern == null ? keys[i].data(allText, device) : keys[i].data(text.match(keys[i].pattern, device)[0].trim()),
+                    value: keys[i].data(searchText.match(keys[i].pattern)[0].trim()),
                     style: '',
                     valid: false
                 };
 
                 var expectation = keys[i].expect;
                 if (expectation != undefined) {
-                    if (keys[i].style != undefined) {
+                    if (keys[i].styles != undefined) {
                         var itemStyle = keys[i].styles.filter(function (style) { return style.value == item.value })[0];
-                        if (itemStyle) {
-                            item.style = itemStyle.style;
-                            item.valid = itemStyle.valid;
-                        }
+                        item.style = itemStyle.style;
+                        item.valid = itemStyle.valid;
                     }
                     else {
                         if (item.value == expectation) {
@@ -726,341 +983,81 @@ export class RingLib {
                         }
                     }
                 }
-
-                values.push(item);
+                rowValues.push(item);
             }
+            values.push(rowValues);
+        })
 
-            // check if we have "optic" in the array, if there validate TX and RX levels
-            var opticItem = values.filter(function (item) { return item.name == 'Optic'; });
+        // check if we have "optic" in the array, if there validate TX and RX levels
+        var opticItem = values[0].filter(function (obj) { return obj.name == 'Optic'; });
 
-            if (opticItem && opticItem.length > 0) {
-                var opticValue = opticItem[0].value;
+        if (opticItem && opticItem.length > 0) {
+            var opticValue = opticItem[0].value;
 
-                var optic = this.css_cisco_optics_ranges.filter(function (item) { return item.optic == opticValue; })[0];
+            var optic = this.css_alcatel_optics_ranges.filter(function (obj) { return obj.optic == opticValue; })[0];
 
-                //validate Tx level
-                var txItem = values.filter(function (item) { return item.name == 'TX Level'; })[0];
-
-                txItem.title = optic["optic"].split(' ')[0] + ' (Tx) ' + optic.tx_min + ' to ' + optic.tx_max;
-
-
-                var txLevel = parseFloat(txItem.value);
-                if (txLevel >= optic["tx_min"] && txLevel <= optic["tx_max"]) {
-                    txItem.style = 'text-success bg-success';
-                    txItem.valid = true;
-                }
-                else {
-                    txItem.style = 'text-danger bg-danger';
-                    txItem.valid = false;
-                }
-
-                //validate Rx level
-                var rxItem = values.filter(function (item) { return item.name == 'RX Level'; })[0];
-
-                rxItem.title = optic["optic"].split(' ')[0] + ' (Rx) ' + optic.rx_min + ' to ' + optic.rx_max;
-
-                var rxLevel = parseFloat(rxItem.value);
-                if (rxLevel >= optic["rx_min"] && rxLevel <= optic["rx_max"]) {
-                    rxItem.style = 'text-success bg-success';
-                    rxItem.valid = true;
-                }
-                else {
-                    rxItem.style = 'text-danger bg-danger';
-                    rxItem.valid = false;
-                }
-            }
-
-
-            return values;
-        },
-
-        'cssCiscoPortsParser': function (keys, text) {
-            console.log('cssCiscoPortsParser:' + text);
-            var key = keys[0];
-            var pattern = key.pattern;
-            var ports = text.match(pattern);
-            var values = [];
-            ports.forEach(function (port) {
-                var obj = {
-                    index: key.index,
-                    name: key.name,
-                    value: port.replace('Te', '').trim(),
-                }
-                values.push(obj);
-            })
-
-            return values;
-        },
-
-        'physicalLayerParser': function (keys, text) {
-
-            // this parser will search the provided text, find a key then extract the value that follows
-
-            var obj = {};
-            for (var i = 0; i < keys.length; ++i in keys) {
-                var key = keys[i];
-                var startIndex = text.indexOf(key.find) + key.find.length;
-                var data = text.substr(startIndex, key.size);
-
-                if (typeof (key.expect) == 'undefined') {
-                    key.style = 'text-default';
-                    key.valid = true;
-                } else {
-                    if (data.trim() == key.expect) {
-                        key.style = 'text-success bg-success';
-                        key.valid = true;
-                    } else {
-                        key.style = 'text-danger bg-danger';
-                        key.valid = false;
-                    }
-                }
-                obj[key.name] = {
-                    index: key.index,
-                    name: key.name,
-                    value: data.trim(),
-                    style: key.style,
-                    valid: key.valid
-                }
-            }
-            var optic = this.eln_optics_ranges.filter(function (item) { return item.optic == obj["Optic"].value; })[0];
-
-            obj["TX Level"].title = optic["optic"].split(' ')[0] + ' (Tx) ' + optic.tx_min + ' to ' + optic.tx_max;
-            obj["RX Level"].title = optic["optic"].split(' ')[0] + ' (Rx) ' + optic.rx_min + ' to ' + optic.rx_max;
             //validate Tx level
-            var txLevel = parseFloat(obj["TX Level"].value);
+            var txItem = values[0].filter(function (obj) { return obj.name == 'TX Level'; })[0];
+
+            txItem.title = 'minimum:' + optic.tx_min + ', maximum:' + optic.tx_max;
+
+            var txLevel = parseFloat(txItem.value);
             if (txLevel >= optic["tx_min"] && txLevel <= optic["tx_max"]) {
-                obj["TX Level"].style = 'text-success bg-success';
-                obj["TX Level"].valid = true;
+                txItem.style = 'text-success bg-success';
+                txItem.valid = true;
             }
             else {
-                obj["TX Level"].style = 'text-danger bg-danger';
-                obj["TX Level"].valid = false;
+                txItem.style = 'text-danger bg-danger';
+                txItem.valid = false;
             }
 
             //validate Rx level
-            var rxLevel = parseFloat(obj["RX Level"].value);
+            var rxItem = values[0].filter(function (obj) { return obj.name == 'RX Level'; })[0];
+
+            rxItem.title = 'minimum:' + optic.rx_min + ', maximum:' + optic.rx_max;
+            var rxLevel = parseFloat(rxItem.value);
             if (rxLevel >= optic["rx_min"] && rxLevel <= optic["rx_max"]) {
-                obj["RX Level"].style = 'text-success bg-success';
-                obj["RX Level"].valid = true;
+                rxItem.style = 'text-success bg-success';
+                rxItem.valid = true;
             }
             else {
-                obj["RX Level"].style = 'text-danger bg-danger';
-                obj["RX Level"].valid = false;
+                rxItem.style = 'text-danger bg-danger';
+                rxItem.valid = false;
             }
-
-            return obj;
-        },
-
-        'ringPathParser': function (keys, text) {
-
-            // this parser will search the provided text, find a key then extract the value that follows
-
-            var obj = {};
-
-            for (var i = 0; i < keys.length; ++i in keys) {
-                var key = keys[i];
-                var startIndex = text.indexOf(key.find) + key.skip;
-                var data = text.substr(startIndex, key.size);
-
-                if (key.name == 'Ring Path' && data.indexOf('===') != -1)
-                    data = 'Pending';
-
-                obj[key.name] = {
-                    index: key.index,
-                    name: key.name,
-                    value: data.trim(),
-                    valid: true
-                };
-
-            }
-
-            return obj;
-        },
-
-        'logicalRingParser': function (keys, text) {
-            // this parser will search the provided text, find a key then extract the value that follows
-            var obj = {};
-
-            var status = 'Ready';
-
-            for (var i = 0; i < keys.length; ++i in keys) {
-                var key = keys[i];
-                var startIndex = text.indexOf(key.find) + key.skip;
-                var data = text.substr(startIndex, key.size);
-
-                if (typeof (key.expect) == 'undefined') {
-                    key.style = 'text-default';
-                    key.valid = true;
-                } else {
-
-                    if (data.trim() == key.expect) {
-                        key.style = 'text-success bg-success';
-                        key.valid = true;
-                    } else {
-                        key.style = 'text-danger bg-danger';
-                        key.valid = false;
-                    }
-                }
-
-                obj[key.name] = {
-                    index: key.index,
-                    name: key.name,
-                    value: data.trim(),
-                    style: key.style,
-                    valid: key.valid
-                };
-
-            }
-
-
-            return obj;
-        },
-
-        'showPortsParser': function (keys, text) {
-
-            // this parser will search the provided text, find a key then extract the value that follows
-
-            var values = [];
-            var lines = text.split('\n');
-            // find lines numbers 
-            var portHeadingLines = []
-            lines.forEach(function (line, index) {
-                if (line.indexOf('Ports on Slot ') > -1)
-                    portHeadingLines.push(index + 5);
-            }
-            );
-
-            var counter = 0;
-            while (counter < portHeadingLines.length) {
-                for (var j = portHeadingLines[counter]; lines[j].trim() != ''; j++) {
-                    if (lines[j].substring(0, 1) == '=') continue;
-                    var rowValues = [];
-                    for (var i = 0; i < keys.length; ++i in keys) {
-                        var key = keys[i];
-                        var startIndex = lines[j].indexOf(key.find) + key.skip;
-                        var data = lines[j].substr(startIndex, key.size);
-                        rowValues.push(data.trim());
-                    }
-                    values.push(rowValues);
-                }
-                counter++;
-            }
-
-            return values;
-        },
-
-        'cssAlcatelPortsParser': function (keys, text) {
-            var key = keys[0];
-            var pattern = key.pattern;
-            var data = text.match(pattern);
-            var values = [];
-            data.forEach(function (portData) {
-                var rowValues = [];
-
-                for (var i = 0; i < keys.length; ++i in keys) {
-
-                    var searchText = keys[i].searchWholeResponse ? text : portData;
-                    // if the pattern is null, we will pass the whole text to the data function
-                    var item = {
-                        index: keys[i].index,
-                        name: keys[i].name,
-                        value: keys[i].data(searchText.match(keys[i].pattern)[0].trim()),
-                        style: '',
-                        valid: false
-                    };
-
-                    var expectation = keys[i].expect;
-                    if (expectation != undefined) {
-                        if (keys[i].styles != undefined) {
-                            var itemStyle = keys[i].styles.filter(function (style) { return style.value == item.value })[0];
-                            item.style = itemStyle.style;
-                            item.valid = itemStyle.valid;
-                        }
-                        else {
-                            if (item.value == expectation) {
-                                item.style = 'text-success bg-success';
-                                item.valid = true;
-                            } else {
-                                item.style = 'text-danger bg-danger';
-                                item.valid = false;
-                            }
-                        }
-                    }
-                    rowValues.push(item);
-                }
-                values.push(rowValues);
-            })
-
-            // check if we have "optic" in the array, if there validate TX and RX levels
-            var opticItem = values[0].filter(function (obj) { return obj.name == 'Optic'; });
-
-            if (opticItem && opticItem.length > 0) {
-                var opticValue = opticItem[0].value;
-
-                var optic = this.css_alcatel_optics_ranges.filter(function (obj) { return obj.optic == opticValue; })[0];
-
-                //validate Tx level
-                var txItem = values[0].filter(function (obj) { return obj.name == 'TX Level'; })[0];
-
-                txItem.title = 'minimum:' + optic.tx_min + ', maximum:' + optic.tx_max;
-
-                var txLevel = parseFloat(txItem.value);
-                if (txLevel >= optic["tx_min"] && txLevel <= optic["tx_max"]) {
-                    txItem.style = 'text-success bg-success';
-                    txItem.valid = true;
-                }
-                else {
-                    txItem.style = 'text-danger bg-danger';
-                    txItem.valid = false;
-                }
-
-                //validate Rx level
-                var rxItem = values[0].filter(function (obj) { return obj.name == 'RX Level'; })[0];
-
-                rxItem.title = 'minimum:' + optic.rx_min + ', maximum:' + optic.rx_max;
-                var rxLevel = parseFloat(rxItem.value);
-                if (rxLevel >= optic["rx_min"] && rxLevel <= optic["rx_max"]) {
-                    rxItem.style = 'text-success bg-success';
-                    rxItem.valid = true;
-                }
-                else {
-                    rxItem.style = 'text-danger bg-danger';
-                    rxItem.valid = false;
-                }
-            }
-
-            return values;
-        },
-
-        'servicesParser': function (device, keys, text) {
-
-            // this parser will search the provided text, find a key then extract the value that follows
-
-            var values = [];
-            var lines = text.split('\n');
-
-            for (var j = 6; j < lines.length - 5; j++) {
-                if (lines[j].substr(0, 1) === '-') continue;
-                var rowValues = [];
-                for (var i = 0; i < keys.length; ++i in keys) {
-                    var key = keys[i];
-                    var startIndex = 0 + key.skip;
-                    var data = lines[j].substr(startIndex, key.size);
-                    rowValues.push(data.trim());
-                }
-                if (parseInt(rowValues[0]) > 100) {
-                    values.push(rowValues[0]);
-
-                    // check mismatch of vlan - service id and customer service name must match
-                    if (rowValues[0] != rowValues[4]) {
-                        alert(device.name + ' - Mismatch of vlan - service id and customer service name must match');
-                    }
-                }
-            }
-
-            return values;
         }
+
+        return values;
     }
+
+    servicesParser(device, keys, text) {
+
+        // this parser will search the provided text, find a key then extract the value that follows
+
+        var values = [];
+        var lines = text.split('\n');
+
+        for (var j = 6; j < lines.length - 5; j++) {
+            if (lines[j].substr(0, 1) === '-') continue;
+            var rowValues = [];
+            for (var i = 0; i < keys.length; ++i in keys) {
+                var key = keys[i];
+                var startIndex = 0 + key.skip;
+                var data = lines[j].substr(startIndex, key.size);
+                rowValues.push(data.trim());
+            }
+            if (parseInt(rowValues[0]) > 100) {
+                values.push(rowValues[0]);
+
+                // check mismatch of vlan - service id and customer service name must match
+                if (rowValues[0] != rowValues[4]) {
+                    alert(device.name + ' - Mismatch of vlan - service id and customer service name must match');
+                }
+            }
+        }
+
+        return values;
+    }
+
 
     standardConfig =
     "#-------------  Creating SAP-Ingress 100  --------------\n" +
@@ -1283,8 +1280,18 @@ export class RingLib {
     "#---- END SVC ID <<id>> Cfg------\n\n"
 
 
-    getParser(command) {
-        return this.parsers[command];
+    getParser(command){
+        switch (command) {
+            case "eln_master_parser": return this["eln_master_parser"];
+            case "cssCiscoParser": return this["cssCiscoParser"]; 
+            case "cssCiscoPortsParser": return this["cssCiscoPortsParser"]; 
+            case "physicalLayerParser": return this["physicalLayerParser"];
+            case "ringPathParser": return this["ringPathParser"];
+            case "logicalRingParser": return this["logicalRingParser"];
+            case "showPortsParser": return this["showPortsParser"];
+            case "cssAlcatelPortsParser": return this["cssAlcatelPortsParser"];
+            case "servicesParser": return this["servicesParser"];
+        }
     }
     getELNPanels() {
         return this.eln_panels;

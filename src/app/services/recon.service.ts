@@ -10,7 +10,7 @@ export class ReconService {
         
     }
 
-    async sendCommand(data):Promise<Object>{         
+    sendCommand(data):Promise<Object>{         
         var jsonStringfiedVersion = {
                         json: encodeURIComponent(JSON.stringify(data)),
                         backendUrl: this.sendCommandUrl,

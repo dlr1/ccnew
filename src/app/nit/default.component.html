@@ -1,9 +1,9 @@
 <div class="row">
-    <md-select placeholder="select a ring" (change)="getRing($event)">
-        <md-option *ngFor="let ring of rings" [value]="ring.name">
-            {{ring.name}}
-        </md-option>
-    </md-select>
+    <select placeholder="select a ring" [(ngModel)]="ring" (change)="getRing()">
+        <option *ngFor="let r of rings" [ngValue]="r">
+            {{r.name}}
+        </option>
+    </select>
 </div>
 <div class="card" style="margin-top:10px;" *ngFor="let device of devices">
     <div class="card-header">

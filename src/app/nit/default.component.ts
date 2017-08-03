@@ -66,7 +66,7 @@ export class NitComponent {
         alert('Device ' + device.name + ' type is \'' + device.type + '\'. It should be ELN. Make sure it is correctly entered in TBS');
         device.isRunning = false;
       }
-      else {
+      else {     
         this.cssDeviceService.getMetadata(this.ring, device, this.selectedRing).then(function () {
           device.view = 'ringview';
           device.isRunning = false;
@@ -76,14 +76,12 @@ export class NitComponent {
     })
   }
 
-getRing(ring) {
-  this.ring = ring;
-  this.nitService.getRing(ring.value).subscribe(data => {
+getRing() {  
+  this.nitService.getRing(this.ring.name).subscribe(data => {
     this.devices = this.nitService.getUniqueNodes(data[0].spans);
   });
 }
-async ngOnInit() { 
-  console.log('sdafsdgsdgs');
+ngOnInit() {   
   this.nitService.getRings().subscribe(data => {
     this.rings = data;
   })
