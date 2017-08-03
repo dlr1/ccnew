@@ -2,7 +2,7 @@
 <div *ngIf="canShow">this is shown if can show is true</div>
 
 <p>Using let</p>
-<div *ngFor="let hero of heroes; let i=index">{{i + 1}} - {{hero.name}}</div>
+<div *ngFor="let hero of heroes; let i=index">{{i + 1}} - {{hero}}</div>
 
 <br/>
 <p>*ngIf then else</p>
@@ -10,3 +10,7 @@
 <li *ngIf="checked;then tmplchecked else tmplunchecked"></li>
 <ng-template #tmplchecked><li>checkbox is checked</ng-template>
 <ng-template #tmplunchecked><li>checkbox is unchecked</ng-template>
+<br/>
+<select ngModel (ngModelChange)="doSomething($event)" id="selectid" class="form-control-mb-12">
+ <option *ngFor="let hero of heroes" [value]="hero">{{hero}}</option>
+</select>

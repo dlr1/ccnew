@@ -1,15 +1,5 @@
 body, html { 
   height: 100%;
+  width:100%;
 }
 
-.container {
-  display: block;
-  overflow: auto;
-  min-height: 100%;
-  height: 100%;
-  height: auto;
-}
-
-.bottom {
-  width: 100%;
-}

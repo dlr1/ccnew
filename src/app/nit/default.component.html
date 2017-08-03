@@ -1,0 +1,54 @@
+<div class="row">
+    <md-select placeholder="select a ring" (change)="getRing($event)">
+        <md-option *ngFor="let ring of rings" [value]="ring.name">
+            {{ring.name}}
+        </md-option>
+    </md-select>
+</div>
+<div class="card" style="margin-top:10px;" *ngFor="let device of devices">
+    <div class="card-header">
+        <div class="row">
+            <div class="col-3"> {{device.name}}</div>
+            <div class=col-4>{{device.address}} - <i>{{ringName}}</i></div>
+            <div class="col-3">
+                <a style="margin-left:5px;color:rgba(0, 0, 0, 0.50)" href="javascript:void(0)" ng-click="toggleDeviceView(device, 'ringview')">
+                                        <i class="fa fa-lg fa-crosshairs"></i>
+                                    </a>
+                <a style="margin-left:5px;color:rgba(0, 0, 0, 0.50)" ng-hide="device.isCSSDevice" title="Show port&#13;Show chasis&#13;Show service"
+                    href="javascript:void(0)" ng-click="toggleDeviceView(device, 'chassis')">
+                                        <i class="fa fa-lg fa-tasks"></i>
+                                    </a>
+                <a style="margin-left:5px;color:rgba(0, 0, 0, 0.50)" ng-hide="device.isCSSDevice" title="Customer Service IDs" href="javascript:void(0)"
+                    ng-click="toggleDeviceView(device, 'services')">
+                                        <i class="fa fa-lg fa-list-ol"></i>
+                                    </a>
+                <a style="margin-left:5px;color:rgba(0, 0, 0, 0.50)" href="javascript:void(0)" ng-click="showTerminal(device)" title="Hyper Terminal"
+                    ng-style="{color: (device.isLoggedOn ? 'green' : 'rgba(0, 0, 0, 0.50)') }" ng-enabled="false">
+                                        <i class="fa fa-lg fa-terminal" style="font-weight:bold"></i>
+                                    </a>
+                <a style="margin-left:5px;color:rgba(0, 0, 0, 0.50)" ng-show="hasVPLSServicesError(device)" title="Missing Customer IDs"
+                    href="javascript:void(0)" ng-click="toggleDeviceView(device, 'vpls')">
+                                        <i class="fa fa-lg fa-user" style="color:red"></i>
+                                    </a>
+                <a style="margin-left:5px;color:rgba(0, 0, 0, 0.50)" ng-show="hasVPLSServicesError(device)" title="show pass-through config script"
+                    href="javascript:void(0)" ng-click="openScript(device)">
+                                        <i class="fa fa-lg fa-file-text-o"></i>
+                                    </a>
+            </div>
+            <div class="col-2">
+                <a style="margin-left:5px;color:rgba(0, 0, 0, 0.50)" href="javascript:void(0)" (click)="getDeviceMetaData(device)" title="Run/Refresh">
+                                        <i class="fa fa-lg fa-play" ng-class="getRunIcon(device)"></i>
+                                    </a>
+                <a style="margin-left:5px;color:rgba(0, 0, 0, 0.50)" ng-hide="(!device.isCSSDevice && isNITReadOnly) || device.isCSSDevice"
+                    href="javascript:void(0)" title="Load QoS config" ng-click="uploadStandardConfigToDevice(device)" title="push standard config to the device">
+                                        <i class="fa fa-lg fa-send"></i>
+                                    </a>
+                <a style="margin-left:5px;color:rgba(0, 0, 0, 0.50)" ng-click="uploadCustomerConfigToDevice(device)" title="Load pass-through config"
+                    ng-show="device.metadata.missingServiceIds.length > 0 && isNITReadOnly !='true'" ng-hide="(!device.isCSSDevice) || device.metadata.missingServiceIds.length == 0 || ring.masterServiceIds.length == 0 || device.isCSSDevice"
+                    href="javascript:void(0)">
+                                        <i class="fa fa-lg fa-cloud-upload"></i>
+                                    </a>
+            </div>
+        </div>
+    </div>
+</div>

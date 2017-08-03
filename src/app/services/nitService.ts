@@ -1,17 +1,36 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from "@angular/common/http";
 import { Observable } from "rxjs/Observable";
+import 'rxjs/add/operator/toPromise';
 
 @Injectable()
 export class NitService {
     baseUrl:string = "http://cmdctrl-test";
+    disconnectUrl = "https://plancactst01.pla.dc.xo.com:8000/dcm/disconnect";
+    connectUrl = "https://plancactst01.pla.dc.xo.com:8000/dcm/connect";
     constructor(private http: HttpClient){
         
+    }
+       
+    disconnect(data): Promise<object>{       
+        var jsonStringfiedVersion = {
+                        json: encodeURIComponent(JSON.stringify(data)),
+                        backendUrl: this.disconnectUrl,
+                        opMethod: "POST"
+                    };
+                     var backendUrl = "/api/dcmService";
+        return this.http.post(`${this.baseUrl}/api/dcmService`, jsonStringfiedVersion).toPromise();
+    }
+
+    getConnection(request): Promise<object>{
+        request.osusername = 'ldarbha';      
+        request.connectUrl = this.connectUrl;  
+        return this.http.post(`${this.baseUrl}/api/connectRequest`, request).toPromise();
     }
 
     getRings(): Observable<Object>{        
         return this.http.get('http://cmdctrl-test/api/rings');
-    }
+    }    
 
     getRing(ringName: string){
         return this.http.get(`${this.baseUrl}/api/rings?Name=${ringName}&DeviceNameUrl=https://plancactst01.pla.dc.xo.com:8000/dcm/admin/devices/tbs`);       

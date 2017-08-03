@@ -7,4 +7,8 @@ import { Component } from '@angular/core';
 export class StructuralComponent {
    
    heroes = ['Windstorm', 'Bombasto', 'Magneta', 'Tornado'];
+
+   doSomething(value: string){
+     console.log(value);
+   }
 }

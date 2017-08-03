@@ -14,16 +14,18 @@ import {NitService} from './services/nitService';
 import {ControlsService} from './services/controls.service';
 
 import { AppComponent } from './app.component';
-import {NitComponent} from './nit/default.component';
+import {NitModule} from './nit/nit.module';
 import { LoaderComponent } from "./loader.component";
 import { LoaderService } from "./loader.service";
 import { MyInterceptor } from './my.interceptor';
 
+import { FlexLayoutModule } from '@angular/flex-layout';
+import { CSSDeviceService } from "./services/cssdevice.service";
+import { ReconService } from "./services/recon.service";
 
 @NgModule({
   declarations: [
-    AppComponent,    
-    NitComponent,
+    AppComponent,        
     LoaderComponent     
   ],
   imports: [
@@ -34,11 +36,15 @@ import { MyInterceptor } from './my.interceptor';
     HttpClientModule,
     ControlsModule,
     RouterModule,
-    ReactiveFormsModule   
+    ReactiveFormsModule,
+    FlexLayoutModule,
+    NitModule   
   ],
   providers: [NitService, 
               ControlsService, 
               LoaderService, 
+              CSSDeviceService,
+              ReconService,
               { provide: HTTP_INTERCEPTORS, useClass: MyInterceptor, multi: true }
             ],
   bootstrap: [AppComponent]
