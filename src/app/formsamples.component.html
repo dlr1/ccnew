@@ -1,0 +1,11 @@
+<select class="form-control" (change)="selectionChanged($event)">
+    <option value="1">disable submit button</option>
+    <option value="2">validate on submit</option>
+    <option value="3">Simple Form</option>
+</select>
+<div class="container">
+    <div [ngSwitch]="selectedValue">
+        <form-sample-1 *ngSwitchCase="1"></form-sample-1>
+        <form-sample-2 *ngSwitchCase="2"></form-sample-2>
+    </div>
+</div>

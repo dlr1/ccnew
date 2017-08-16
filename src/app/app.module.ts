@@ -22,11 +22,20 @@ import { MyInterceptor } from './my.interceptor';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { CSSDeviceService } from "./services/cssdevice.service";
 import { ReconService } from "./services/recon.service";
+import { FormSample1Component } from "./formsample1.component";
+import { FormSample2Component } from "./formsample2.component";
+
+import { FormSamplesComponent } from "./formsamples.component";
+import { FieldErrorDisplayComponent } from "./field-error-display.component";
 
 @NgModule({
   declarations: [
     AppComponent,        
-    LoaderComponent     
+    LoaderComponent,
+    FormSamplesComponent,
+    FormSample1Component,
+    FormSample2Component,
+    FieldErrorDisplayComponent     
   ],
   imports: [
     BrowserModule,
